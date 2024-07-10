@@ -30,13 +30,13 @@ def train(yml_path):
     if "transform" in dataset_params:
         transform_list = []
 
-        if dataset_params["transform"].get("flip", False):
-            transform_list.append(transforms.RandomHorizontalFlip())
-            transform_list.append(transforms.RandomVerticalFlip())
-        
         if dataset_params["transform"].get("crop", False):
             crop_size = dataset_params["transform"]
             transform_list.append(transforms.RandomCrop(crop_size))
+        
+        if dataset_params["transform"].get("flip", False):
+            transform_list.append(transforms.RandomHorizontalFlip())
+            transform_list.append(transforms.RandomVerticalFlip())
 
         transform = transforms.Compose(transform_list)
 
