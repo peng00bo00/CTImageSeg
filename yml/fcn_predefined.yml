@@ -1,0 +1,23 @@
+DataSet:
+  img_path: Micro and Nano-CT/Data/OPC_CT_Labelling
+  xml_paths: Micro and Nano-CT/Data/OPC_CT_Labelling/annotations
+  labels: ["crack", "pore"]
+  thickness: 2
+  transform:
+    flip: True
+    crop: [1024, 1024]
+  batch_size: 16
+
+Model:
+  name: fcn_resnet50
+  predefined: True
+  lr: 0.001
+
+Trainer:
+  loss_fn: focal
+  device: cuda
+  epochs: 100
+  eval_per_epoch: 10
+  save_per_epoch: 10
+  tensorboard: True
+  save_path: ./models
