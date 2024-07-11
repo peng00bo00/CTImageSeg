@@ -194,9 +194,8 @@ class SegModelTrainer(ModelTrainer):
         running_loss = 0.0
         eval_metric  = 0.0
 
-        y_true = []
-        y_pred = []
         device = self.device
+        scores = {metric_name: [] for metric_name in  self.metric_fn}
 
         ## change to evaluation mode
         model.eval()
@@ -210,31 +209,31 @@ class SegModelTrainer(ModelTrainer):
                 loss = self.loss_fn(pred, y)
                 running_loss += loss.item() * X.size(0)
 
-                y_pred.append(pred.detach().cpu())
-                y_true.append(y.detach().cpu())
+                y_pred = pred.detach().cpu()
+                y_true = y.detach().cpu()
 
-        eval_loss = running_loss / len(eval_loader.dataset)
+                ## evaluation with metric_fns
+                for metric_name, fn in self.metric_fn.items():
+                    scores[metric_name].append(fn(y_pred, y_true))
 
-        ## evaluation with metric_fns
-        y_pred = torch.cat(y_pred, dim=0)
-        y_true = torch.cat(y_true, dim=0)
-
+        ## take average over multiple classes
         eval_metric_scores = ""
+        for metric_name, metric_scores in scores.items():
+            metric_scores = torch.cat(metric_scores, dim=0)
+            metric_scores = metric_scores.mean(dim=0)
 
-        for metric_name, fn in self.metric_fn.items():
-            scores = fn(y_pred, y_true)
-
-            for label, score in enumerate(scores):
-                tag = f"{metric_name}/eval/class: {label}"
+            for label, score in enumerate(metric_scores):
+                tag = f"{metric_name}/class: {label}"
                 self._write_tensorboard_scalar(tag, score, epoch)
-            
+        
             ## averged metric
-            tag = f"{metric_name}/eval/average"
-            avg_score = scores.mean()
+            tag = f"{metric_name}/average"
+            avg_score = metric_scores.mean()
             self._write_tensorboard_scalar(tag, avg_score, epoch)
 
             eval_metric_scores += f"Evaluation {metric_name}: {avg_score:.4} "
         
+        eval_loss = running_loss / len(eval_loader.dataset)
         tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4f}, {eval_metric_scores}')
 
         return eval_loss, eval_metric
