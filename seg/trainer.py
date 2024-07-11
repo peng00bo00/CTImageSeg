@@ -216,22 +216,22 @@ class SegModelTrainer(ModelTrainer):
                 for metric_name, fn in self.metric_fn.items():
                     scores[metric_name].append(fn(y_pred, y_true))
 
-        ## take average over multiple classes
-        eval_metric_scores = ""
-        for metric_name, metric_scores in scores.items():
-            metric_scores = torch.cat(metric_scores, dim=0)
-            metric_scores = metric_scores.mean(dim=0)
+            ## take average over multiple classes
+            eval_metric_scores = ""
+            for metric_name, metric_scores in scores.items():
+                metric_scores = torch.cat(metric_scores, dim=0)
+                metric_scores = metric_scores.mean(dim=0)
 
-            for label, score in enumerate(metric_scores):
-                tag = f"{metric_name}/class: {label}"
-                self._write_tensorboard_scalar(tag, score, epoch)
-        
-            ## averged metric
-            tag = f"{metric_name}/average"
-            avg_score = metric_scores.mean()
-            self._write_tensorboard_scalar(tag, avg_score, epoch)
+                for label, score in enumerate(metric_scores):
+                    tag = f"{metric_name}/class: {label}"
+                    self._write_tensorboard_scalar(tag, score, epoch)
+            
+                ## averged metric
+                tag = f"{metric_name}/average"
+                avg_score = metric_scores.mean()
+                self._write_tensorboard_scalar(tag, avg_score, epoch)
 
-            eval_metric_scores += f"Evaluation {metric_name}: {avg_score:.4} "
+                eval_metric_scores += f"Evaluation {metric_name}: {avg_score:.4} "
         
         eval_loss = running_loss / len(eval_loader.dataset)
         tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4f}, {eval_metric_scores}')
