@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchmetrics.classification import MulticlassAccuracy, MultilabelAveragePrecision
+from torchmetrics.classification import MulticlassAccuracy, MultilabelAveragePrecision, MulticlassJaccardIndex
 from torchmetrics.segmentation import MeanIoU
 
 
@@ -21,9 +21,13 @@ def MultiAP(num_classes=10, average=None):
     """
 
     def metric(y_pred, y_true):
-        y_true = y_true.squeeze()
-        if y_true.dim() == 1:
-            y_true = F.one_hot(y_true, num_classes=num_classes)
+        # if y_pred.dim() != y_true.dim():
+        #     y_true = y_true.squeeze()
+        
+        # if y_true.dim() == 1:
+        #     y_true = F.one_hot(y_true, num_classes=num_classes)
+
+
 
         ap = MultilabelAveragePrecision(num_classes, average=average)
         return ap(y_pred, y_true)
@@ -35,7 +39,8 @@ def MultiMIOU(num_classes=10):
     """
 
     def metric(y_pred, y_true):
-        miou = MeanIoU(num_classes, include_background=True, per_class=True)
+        # miou = MeanIoU(num_classes+1, include_background=False, per_class=True)
+        miou = MulticlassJaccardIndex(num_classes=num_classes, average="none")
         return miou(y_pred, y_true)
 
     return metric

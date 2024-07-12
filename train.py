@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import os
 
 import torch
 import torch.nn as nn
@@ -25,13 +26,14 @@ def train(yml_path):
     labels   = dataset_params["labels"]
     thickness= dataset_params.get("thickness", 2)
     num_classes = len(labels)
+    xml_paths = [os.path.join(xml_paths, xml_file_path) for xml_file_path in os.listdir(xml_paths) if xml_file_path.endswith(".xml")]
 
     transform= None
     if "transform" in dataset_params:
         transform_list = []
 
         if dataset_params["transform"].get("crop", False):
-            crop_size = dataset_params["transform"]
+            crop_size = dataset_params["transform"]["crop"]
             transform_list.append(transforms.RandomCrop(crop_size))
         
         if dataset_params["transform"].get("flip", False):
@@ -57,14 +59,18 @@ def train(yml_path):
 
     torch.set_rng_state(rng_state)
 
+    print(f"Train DataSet Size: {len(train_dataset)}")
+    print(f"Val DataSet Size: {len(val_dataset)}")
+
     ## dataloader
     batch_size = dataset_params.get("batch_size", 16)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    val_loader   = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    val_loader   = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=8, pin_memory=True)
 
     ## create model
     if model_params.get("predefined", False):
-        model = create_predefined_model(model_params["name"], num_classes=num_classes)
+        model = create_predefined_model(model_params["model_name"], num_classes=num_classes)
+        model.to(trainer_params["device"])
     ## TODO: update with customized model later
     else:
         pass
@@ -73,15 +79,22 @@ def train(yml_path):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     ## create trainer
+    reduction = reduction=trainer_params.get("reduction", "mean")
     if trainer_params.get("loss_fn", "sigmoid") == "focal":
-        trainer_params["loss_fn"] = FocalLoss()
+        trainer_params["loss_fn"] = FocalLoss(reduction=reduction)
+        print(f"Using FocalLoss for training (reduction={reduction}).")
     else:
-        trainer_params["loss_fn"] = nn.BCEWithLogitsLoss()
+        trainer_params["loss_fn"] = nn.BCEWithLogitsLoss(reduction=reduction)
+        print(f"Using BCEWithLogitsLoss for training (reduction={reduction}).")
+    
+    trainer_params["model_name"] = model_params["model_name"]
+    trainer_params["num_classes"] = num_classes
     
     trainer = SegModelTrainer(trainer_params)
 
     ## start training
     trainer.fit(model, train_loader, val_loader, optimizer)
+    # trainer._evaluate(model, val_loader, 0)
 
 def main():
     parser = argparse.ArgumentParser(description="A script to start training process.")

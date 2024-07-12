@@ -142,6 +142,7 @@ class CTImageDataset(Dataset):
         transform: image transform
     """
     def __init__(self, img_root, xml_paths, labels=[], thickness=2, transform=None):
+    
         self.img_root= img_root
         self.parsers = [XMLParser(path, labels, thickness) for path in xml_paths]
 
@@ -179,7 +180,7 @@ class CTImageDataset(Dataset):
         annotation = parser[annotation_idx]
 
         image_path = os.path.join(self.img_root, annotation["name"])
-
+        
         image    = cv2.imread(image_path, 0)
         image    = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)  ## convert 1-channel gray image to 3-channel RGB image
         seg_mask = annotation['mask']

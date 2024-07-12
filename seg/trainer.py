@@ -27,7 +27,7 @@ class ModelTrainer:
         ## whether to use tensorboard to record training process
         self.tensorboard = params.get("tensorboard", False)
         if self.tensorboard:
-            self.writer = SummaryWriter(os.path.join(self.save_path, f"runs/{self.model_name}"))
+            self.writer = SummaryWriter(os.path.join(self.save_path, f"{self.model_name}"))
 
     def fit(self, model, train_loader, eval_loader, optimizer):
         device = self.device
@@ -182,7 +182,7 @@ class SegModelTrainer(ModelTrainer):
         ## update the parameters for segmentation task
         self.num_classes = params.get("num_classes", 10)
         self.metric_fn = {
-            "AP": MultiAP(self.num_classes, average=None),
+            # "AP": MultiAP(self.num_classes, average=None),
             "MIOU": MultiMIOU(self.num_classes)
         }
     
@@ -206,34 +206,48 @@ class SegModelTrainer(ModelTrainer):
             for X, y in eval_loader:
                 X, y = X.to(device), y.to(device)
                 pred = model(X)
+
                 loss = self.loss_fn(pred, y)
                 running_loss += loss.item() * X.size(0)
 
-                y_pred = pred.detach().cpu()
-                y_true = y.detach().cpu()
+                pred = torch.where(pred > 0, 1.0, 0.0)
+                y_pred = pred.detach().squeeze().unsqueeze(0).int().cpu()
+                y_true = y.detach().squeeze().unsqueeze(0).int().cpu()
+
+                # ## check pred
+                # print(y_pred.permute(0,2,3,1)[0,:,:,0])
+                # print(y_pred.permute(0,2,3,1)[0,:,:,1])
+                # raise NotImplementedError
 
                 ## evaluation with metric_fns
                 for metric_name, fn in self.metric_fn.items():
-                    scores[metric_name].append(fn(y_pred, y_true))
-
+                    # print(y_pred.shape, y_true.shape)
+                    score = fn(y_pred, y_true)
+                    # print(score)
+                    scores[metric_name].append(score.unsqueeze(0))
+            
             ## take average over multiple classes
             eval_metric_scores = ""
             for metric_name, metric_scores in scores.items():
                 metric_scores = torch.cat(metric_scores, dim=0)
+                # print(f"{metric_name} on individual sample : {metric_scores}")
                 metric_scores = metric_scores.mean(dim=0)
+                # print(f"{metric_name} after average : {metric_scores}")
 
                 for label, score in enumerate(metric_scores):
                     tag = f"{metric_name}/class: {label}"
                     self._write_tensorboard_scalar(tag, score, epoch)
+                    print(f"{tag}: {score}")
             
                 ## averged metric
                 tag = f"{metric_name}/average"
                 avg_score = metric_scores.mean()
                 self._write_tensorboard_scalar(tag, avg_score, epoch)
 
-                eval_metric_scores += f"Evaluation {metric_name}: {avg_score:.4} "
+                eval_metric_scores += f"Evaluation Average {metric_name}: {avg_score:.4} "
         
         eval_loss = running_loss / len(eval_loader.dataset)
+        self._write_tensorboard_scalar("Loss/eval", eval_loss, epoch)
         tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4f}, {eval_metric_scores}')
 
         return eval_loss, eval_metric

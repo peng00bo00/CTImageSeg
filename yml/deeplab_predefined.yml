@@ -9,15 +9,14 @@ DataSet:
   batch_size: 8
 
 Model:
-  model_name: fcn_resnet50
+  model_name: deeplabv3_resnet50
   predefined: True
-  lr: 0.001
+  lr: 0.01
 
 Trainer:
-  loss_fn: focal
-  reduction: mean
+  loss_fn: not_focal
   device: cuda
-  epochs: 200
+  epochs: 100
   eval_per_epoch: 10
   save_per_epoch: 10
   tensorboard: True
