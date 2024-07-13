@@ -13,7 +13,7 @@ from seg import CTImageDataset, create_predefined_model, SegModelTrainer, FocalL
 
 def train(yml_path):
     ## parse .yml file to retrieve dataset/model/training parameters
-    with open("./yml/fcn_predefined.yml", "r") as f:
+    with open(yml_path, "r") as f:
         yml = yaml.safe_load(f)
 
     dataset_params = yml["DataSet"]

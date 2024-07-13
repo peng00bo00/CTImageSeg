@@ -11,10 +11,11 @@ DataSet:
 Model:
   model_name: deeplabv3_resnet50
   predefined: True
-  lr: 0.01
+  lr: 0.001
 
 Trainer:
-  loss_fn: not_focal
+  loss_fn: focal
+  reduction: mean
   device: cuda
   epochs: 100
   eval_per_epoch: 10
