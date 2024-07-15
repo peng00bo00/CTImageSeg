@@ -50,8 +50,8 @@ def create_smp_predefined_model(model_type:str, num_classes:int, parameters:dict
         predefined_mode: a predefined model
     """
     
-    parameters.update("in_channels", 3)
-    parameters.update("classes", num_classes)
+    parameters.update({"in_channels": 3})
+    parameters.update({"classes": num_classes})
 
     if model_type == "unet":
         model = smp.Unet(**parameters)

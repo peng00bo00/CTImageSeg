@@ -67,11 +67,14 @@ def train(yml_path):
     batch_size = dataset_params.get("batch_size", 16)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
     val_loader   = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=8, pin_memory=True)
+    print("Dataloader preparation is complete!")
 
     ## create model
     if model_params.get("predefined", False):
         if model_params["predefined"] == "smp":
             model = create_smp_predefined_model(model_params["model_type"], num_classes=num_classes, parameters=model_params["parameters"])
+            model_type = model_params["model_type"]
+            print(f"Using SMP.{model_type}() as segmentation model.")
         else:
             model = create_predefined_model(model_params["model_name"], num_classes=num_classes)
     ## TODO: update with customized model later
@@ -84,8 +87,10 @@ def train(yml_path):
     ## loss function
     loss_params = trainer_params.get("loss", {})
     if loss_params.get("predefined", False) == "smp":
-        trainer_params["loss_fn"] = create_loss_fn(loss_params["loss_type"], loss_params[""])
-        print(f"Using SMP.{loss_params["loss_type"]} for training.")
+        trainer_params["loss_fn"] = create_loss_fn(loss_params["loss_type"], loss_params["parameters"])
+
+        loss_type = loss_params["loss_type"]
+        print(f"Using SMP.{loss_type}() for training.")
 
     # reduction = trainer_params.get("reduction", "mean")
     # if trainer_params.get("loss_fn", "sigmoid") == "focal":

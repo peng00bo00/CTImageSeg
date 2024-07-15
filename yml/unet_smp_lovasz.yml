@@ -1,0 +1,39 @@
+DataSet:
+  img_root: "..\\OPC_CT_Labelling"
+  xml_paths: "..\\OPC_CT_Labelling\\annotations"
+  labels: ["crack", "pore"]
+  thickness: 4
+  transform:
+    flip: True
+    crop: [1024, 1024]
+  batch_size: 8
+
+Model:
+  model_name: unet_smp_lovasz
+  predefined: smp
+  model_type: unet
+  parameters:
+    encoder_name: resnet18
+    encoder_weights: imagenet
+    encoder_depth: 3
+    decoder_channels: [128, 32, 16]
+
+Trainer:
+  lr: 0.001
+  scheduler:
+    name: ExponentialLR
+    parameters:
+      gamma: 0.9
+      verbose: True
+  loss:
+    predefined: smp
+    loss_type: LovaszLoss
+    parameters:
+      reduction: "mean"
+      alpha: 0.01
+  device: cuda
+  epochs: 200
+  eval_per_epoch: 10
+  save_per_epoch: 10
+  tensorboard: True
+  save_path: ../models
