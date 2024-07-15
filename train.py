@@ -87,7 +87,7 @@ def train(yml_path):
     ## loss function
     loss_params = trainer_params.get("loss", {})
     if loss_params.get("predefined", False) == "smp":
-        trainer_params["loss_fn"] = create_loss_fn(loss_params["loss_type"], loss_params["parameters"])
+        trainer_params["loss_fn"] = create_loss_fn(loss_params["loss_type"], loss_params.get("parameters", {}))
 
         loss_type = loss_params["loss_type"]
         print(f"Using SMP.{loss_type}() for training.")

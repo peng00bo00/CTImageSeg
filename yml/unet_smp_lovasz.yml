@@ -28,9 +28,6 @@ Trainer:
   loss:
     predefined: smp
     loss_type: LovaszLoss
-    parameters:
-      reduction: "mean"
-      alpha: 0.01
   device: cuda
   epochs: 200
   eval_per_epoch: 10

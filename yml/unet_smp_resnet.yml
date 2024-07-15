@@ -19,7 +19,7 @@ Model:
     decoder_channels: [128, 32, 16]
 
 Trainer:
-  lr: 0.00001
+  lr: 0.001
   scheduler:
     name: ExponentialLR
     parameters:
@@ -30,7 +30,7 @@ Trainer:
     loss_type: FocalLoss
     parameters:
       reduction: "mean"
-      alpha: 0.01
+      alpha: 0.001
   device: cuda
   epochs: 100
   eval_per_epoch: 10
