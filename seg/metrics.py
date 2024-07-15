@@ -27,8 +27,6 @@ def MultiAP(num_classes=10, average=None):
         # if y_true.dim() == 1:
         #     y_true = F.one_hot(y_true, num_classes=num_classes)
 
-
-
         ap = MultilabelAveragePrecision(num_classes, average=average)
         return ap(y_pred, y_true)
 

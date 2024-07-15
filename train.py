@@ -8,8 +8,9 @@ import torch.optim as optim
 from torch.utils.data import random_split, DataLoader
 from torchvision import transforms
 
-from seg import CTImageDataset, create_predefined_model, SegModelTrainer, FocalLoss
-
+from seg import CTImageDataset, SegModelTrainer, FocalLoss
+from seg import create_predefined_model, create_smp_predefined_model, create_lr_scheduler, create_loss_fn
+from seg import pad_to_divisible_by_32
 
 def train(yml_path):
     ## parse .yml file to retrieve dataset/model/training parameters
@@ -43,7 +44,7 @@ def train(yml_path):
         transform = transforms.Compose(transform_list)
 
     train_dataset = CTImageDataset(img_root, xml_paths, labels, thickness, transform)
-    val_dataset   = CTImageDataset(img_root, xml_paths, labels, thickness, None)
+    val_dataset   = CTImageDataset(img_root, xml_paths, labels, thickness, transforms.Lambda(pad_to_divisible_by_32))
 
     ## split training set and validation set
     train_ratio = 0.8
@@ -69,31 +70,46 @@ def train(yml_path):
 
     ## create model
     if model_params.get("predefined", False):
-        model = create_predefined_model(model_params["model_name"], num_classes=num_classes)
-        model.to(trainer_params["device"])
+        if model_params["predefined"] == "smp":
+            model = create_smp_predefined_model(model_params["model_type"], num_classes=num_classes, parameters=model_params["parameters"])
+        else:
+            model = create_predefined_model(model_params["model_name"], num_classes=num_classes)
     ## TODO: update with customized model later
     else:
         pass
     
-    lr = model_params.get("lr", 1e-3)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
-
-    ## create trainer
-    reduction = reduction=trainer_params.get("reduction", "mean")
-    if trainer_params.get("loss_fn", "sigmoid") == "focal":
-        trainer_params["loss_fn"] = FocalLoss(reduction=reduction)
-        print(f"Using FocalLoss for training (reduction={reduction}).")
-    else:
-        trainer_params["loss_fn"] = nn.BCEWithLogitsLoss(reduction=reduction)
-        print(f"Using BCEWithLogitsLoss for training (reduction={reduction}).")
+    model.to(trainer_params["device"])
     
+    ## create trainer
+    ## loss function
+    loss_params = trainer_params.get("loss", {})
+    if loss_params.get("predefined", False) == "smp":
+        trainer_params["loss_fn"] = create_loss_fn(loss_params["loss_type"], loss_params[""])
+        print(f"Using SMP.{loss_params["loss_type"]} for training.")
+
+    # reduction = trainer_params.get("reduction", "mean")
+    # if trainer_params.get("loss_fn", "sigmoid") == "focal":
+    #     trainer_params["loss_fn"] = FocalLoss(reduction=reduction)
+    #     print(f"Using FocalLoss for training (reduction={reduction}).")
+    # else:
+    #     trainer_params["loss_fn"] = nn.BCEWithLogitsLoss(reduction=reduction)
+    #     print(f"Using BCEWithLogitsLoss for training (reduction={reduction}).")
+    
+    ## optimizer
+    lr = trainer_params.get("lr", 1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    
+    ## scheduler
+    scheduler = create_lr_scheduler(optimizer, trainer_params.get("scheduler", {}))
+    
+    ## trainer instance
     trainer_params["model_name"] = model_params["model_name"]
     trainer_params["num_classes"] = num_classes
-    
+
     trainer = SegModelTrainer(trainer_params)
 
     ## start training
-    trainer.fit(model, train_loader, val_loader, optimizer)
+    trainer.fit(model, train_loader, val_loader, optimizer, scheduler)
     # trainer._evaluate(model, val_loader, 0)
 
 def main():

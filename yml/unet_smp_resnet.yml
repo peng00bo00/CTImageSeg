@@ -9,8 +9,14 @@ DataSet:
   batch_size: 8
 
 Model:
-  model_name: deeplabv3_resnet50
-  predefined: True
+  model_name: unet_smp_resnet
+  predefined: smp
+  model_type: unet
+  parameters:
+    encoder_name: resnet18
+    encoder_weights: imagenet
+    encoder_depth: 3
+    decoder_channels: [128, 32, 16]
 
 Trainer:
   lr: 0.00001
@@ -19,8 +25,12 @@ Trainer:
     parameters:
       gamma: 0.9
       verbose: True
-  loss_fn: focal
-  reduction: mean
+  loss:
+    predefined: smp
+    loss_type: FocalLoss
+    parameters:
+      reduction: "mean"
+      alpha: 0.01
   device: cuda
   epochs: 100
   eval_per_epoch: 10

@@ -10,6 +10,26 @@ from torch.utils.tensorboard import SummaryWriter
 
 from .metrics import MultiAP, MultiMIOU
 
+def create_lr_scheduler(optimizer, params: dict)->torch.optim.lr_scheduler:
+    """Create a learning rate scheduler.
+
+    Args:
+        optimizer: model optimizer
+        params: scheduler parameters
+    
+    Return:
+        scheduler: a learning rate scheduler
+    """
+    scheduler = None
+    scheduler_params = params.get("parameters", None)
+
+    if params["name"] == "ExponentialLR":
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, **scheduler_params)
+    elif params["name"] == "StepLR":
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, **scheduler_params)
+
+    return scheduler
+
 class ModelTrainer:
     """A model trainer class used in PyTorch model training.
     """
@@ -29,7 +49,7 @@ class ModelTrainer:
         if self.tensorboard:
             self.writer = SummaryWriter(os.path.join(self.save_path, f"{self.model_name}"))
 
-    def fit(self, model, train_loader, eval_loader, optimizer):
+    def fit(self, model, train_loader, eval_loader, optimizer, scheduler=None):
         device = self.device
         best_eval_loss = float('inf')
 
@@ -41,6 +61,8 @@ class ModelTrainer:
 
         for epoch in range(self.epochs):
             train_loss = self._train(model, train_loader, optimizer, epoch+1)
+            if scheduler:
+                scheduler.step()
 
             ## evaluate the model when needed
             if (epoch + 1) % self.eval_per_epoch == 0:

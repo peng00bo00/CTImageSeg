@@ -6,6 +6,7 @@ CT image segmentation on high temperature OPC.
 - PyTorch
 - TensorBoard
 - [TorchMetrics](https://lightning.ai/docs/torchmetrics/stable/)
+- [Segmentation Models](https://smp.readthedocs.io/en/latest/index.html#)
 
 ## TODO
 

@@ -8,6 +8,17 @@ from torch.utils.data import Dataset
 from torchvision.io import read_image
 import torchvision.transforms as transforms
 
+def pad_to_divisible_by_32(image):
+    """A helper function to pad image size by 32.
+    """
+    h, w = image.shape[-2:]
+
+    ## new shape
+    h_new = (h + 31) // 32 * 32
+    w_new = (w + 31) // 32 * 32
+        
+    return torch.nn.functional.pad(image, (0, w_new - w, 0, h_new - h))
+
 class XMLParser:
     """A XML parser for loading annotated CT image.
     """

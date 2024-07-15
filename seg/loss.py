@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import segmentation_models_pytorch as smp
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1., gamma=2., reduction='mean'):
@@ -26,3 +27,17 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()
         else:
             return focal_loss
+
+def create_loss_fn(loss_type: str, params: dict):
+    """A helper function to create loss function from SMP.
+    """
+
+    if loss_type == "FocalLoss":
+        params.update("mode", "binary")
+        return smp.losses.FocalLoss(**params)
+    elif loss_type == "LovaszLoss":
+        params.update("mode", "binary")
+        params.update("from_logits", True)
+        return smp.losses.LovaszLoss(**params)
+    else:
+        raise NotImplementedError(f"Invalid SMP loss type: {loss_type}")
