@@ -6,7 +6,7 @@ DataSet:
   transform:
     flip: True
     crop: [1024, 1024]
-  batch_size: 8
+  batch_size: 16
 
 Model:
   model_name: unet_smp_lovasz

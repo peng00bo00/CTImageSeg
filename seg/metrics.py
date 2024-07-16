@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchmetrics.classification import MulticlassAccuracy, MultilabelAveragePrecision, MulticlassJaccardIndex
+from torchmetrics.classification import MulticlassAccuracy, MultilabelAveragePrecision, MulticlassJaccardIndex, MultilabelJaccardIndex
 from torchmetrics.segmentation import MeanIoU
 
 
@@ -38,7 +38,7 @@ def MultiMIOU(num_classes=10):
 
     def metric(y_pred, y_true):
         # miou = MeanIoU(num_classes+1, include_background=False, per_class=True)
-        miou = MulticlassJaccardIndex(num_classes=num_classes, average="none")
+        miou = MultilabelJaccardIndex(num_labels=num_classes, average="none")
         return miou(y_pred, y_true)
 
     return metric

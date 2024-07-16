@@ -259,7 +259,7 @@ class SegModelTrainer(ModelTrainer):
                 for label, score in enumerate(metric_scores):
                     tag = f"{metric_name}/class: {label}"
                     self._write_tensorboard_scalar(tag, score, epoch)
-                    print(f"{tag}: {score}")
+                    print(f"{tag}: {score:.4f}")
             
                 ## averged metric
                 tag = f"{metric_name}/average"
