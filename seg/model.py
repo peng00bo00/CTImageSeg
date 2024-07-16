@@ -55,6 +55,8 @@ def create_smp_predefined_model(model_type:str, num_classes:int, parameters:dict
 
     if model_type == "unet":
         model = smp.Unet(**parameters)
+    elif model_type == "unet++":
+        model = smp.UnetPlusPlus(**parameters)
     elif model_type == "PSPNet":
         model = smp.PSPNet(**parameters)
     elif model_type == "DeepLabV3+":

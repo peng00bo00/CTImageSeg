@@ -33,10 +33,10 @@ def create_loss_fn(loss_type: str, params: dict):
     """
 
     if loss_type == "FocalLoss":
-        params.update({"mode": "binary"})
+        params.update({"mode": "multilabel"})
         return smp.losses.FocalLoss(**params)
     elif loss_type == "LovaszLoss":
-        params.update({"mode": "binary"})
+        params.update({"mode": "multilabel"})
         params.update({"from_logits": True})
         return smp.losses.LovaszLoss(**params)
     else:

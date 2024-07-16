@@ -2,14 +2,14 @@ DataSet:
   img_root: "..\\OPC_CT_Labelling"
   xml_paths: "..\\OPC_CT_Labelling\\annotations"
   labels: ["crack", "pore"]
-  thickness: 10
+  thickness: 4
   transform:
     flip: True
     crop: [1024, 1024]
   batch_size: 8
 
 Model:
-  model_name: unet_smp_resnet
+  model_name: unet_smp_focal
   predefined: smp
   model_type: unet
   parameters:
@@ -32,7 +32,7 @@ Trainer:
       reduction: "mean"
       alpha: 0.001
   device: cuda
-  epochs: 100
+  epochs: 200
   eval_per_epoch: 10
   save_per_epoch: 10
   tensorboard: True
