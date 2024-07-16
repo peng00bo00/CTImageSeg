@@ -16,7 +16,7 @@ Model:
     encoder_name: resnet18
     encoder_weights: imagenet
     encoder_depth: 3
-    decoder_channels: [128, 32, 16]
+    decoder_channels: [64, 32, 16]
 
 Trainer:
   lr: 0.001
