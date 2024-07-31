@@ -19,11 +19,13 @@ def inference(yml_path, pth_path, img_path, save_path):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     num_classes = len(yml["DataSet"]["labels"])
 
+    print("Creating output dirs...")
     for idx in range(num_classes):
         label_save_path = os.path.join(save_path, f"label_{idx}")
         os.makedirs(label_save_path, exist_ok=True)
 
     ## create model instance
+    print("Initializing seg model...")
     model_params = yml["Model"]
 
     if model_params.get("predefined", False):
@@ -41,6 +43,8 @@ def inference(yml_path, pth_path, img_path, save_path):
     model = model.to(device)
     model.load_state_dict(torch.load(pth_path))
     model.eval()
+
+    print("Seg model is loaded!")
 
     ## inference on CT images
     imgs = [img for img in os.listdir(img_path) if img.endswith((".jpg", ".png", ".bmp"))]
@@ -72,7 +76,7 @@ def inference(yml_path, pth_path, img_path, save_path):
             save_file_path = os.path.join(save_path, f"label_{idx}", f"{name}.png")
             cv2.imwrite(save_file_path, pred[:, :, idx].astype(np.uint8))
         
-        tqdm.write(f"{name} is saved in {save_path}")
+        # tqdm.write(f"{name} is saved in {save_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="A script to start training process.")

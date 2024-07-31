@@ -125,7 +125,7 @@ class ModelTrainer:
         ## write to tensorboard
         self._write_tensorboard_scalar("Loss/train", train_loss, epoch)
 
-        tqdm.write(f'Epoch {epoch}/{self.epochs}, Training Loss: {train_loss:.4f}')
+        tqdm.write(f'Epoch {epoch}/{self.epochs}, Training Loss: {train_loss:.4e}')
 
         return train_loss
 
@@ -168,7 +168,7 @@ class ModelTrainer:
         self._write_tensorboard_scalar("Loss/eval", eval_loss, epoch)
         self._write_tensorboard_scalar("Metric/eval", eval_metric, epoch)
 
-        tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4f}, Evaluation Metric: {eval_metric:.4f}')
+        tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4e}, Evaluation Metric: {eval_metric:.4f}')
 
         return eval_loss, eval_metric
 
@@ -270,6 +270,6 @@ class SegModelTrainer(ModelTrainer):
         
         eval_loss = running_loss / len(eval_loader.dataset)
         self._write_tensorboard_scalar("Loss/eval", eval_loss, epoch)
-        tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4f}, {eval_metric_scores}')
+        tqdm.write(f'Epoch {epoch}/{self.epochs}, Evaluation Loss: {eval_loss:.4e}, {eval_metric_scores}')
 
         return eval_loss, eval_metric
